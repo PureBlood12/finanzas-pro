@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: finanzas-pro
+    env: node
+    buildCommand: npm run install-all && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+    disk:
+      name: finanzas-data
+      mountPath: /opt/render/project/src/server/data
+      sizeGB: 1
