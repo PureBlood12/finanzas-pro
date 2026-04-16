@@ -14,8 +14,9 @@
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "multer": "^2.1.1",
-    "sqlite": "^5.1.1",
-    "sqlite3": "^5.1.7"
+    "pg": "^8.11.3",
+    "otplib": "^12.0.1",
+    "qrcode": "^1.5.3"
   },
   "devDependencies": {
     "nodemon": "^3.1.0"

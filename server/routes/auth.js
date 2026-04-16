@@ -2,14 +2,28 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { authenticator } = require('otplib');
+const qrcode = require('qrcode');
 const { getDb } = require('../database');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'finanzas-pro-secret-2024';
 
+// Helper to verify token from headers
+const verifyToken = (req) => {
+  const auth = req.headers.authorization;
+  if (!auth) return null;
+  try {
+    const token = auth.split(' ')[1];
+    return jwt.verify(token, JWT_SECRET);
+  } catch {
+    return null;
+  }
+};
+
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { username, password, token2fa } = req.body;
     if (!username || !password) {
       return res.status(400).json({ error: 'Username and password required' });
     }
@@ -26,6 +40,18 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
+    // Check if 2FA is required
+    if (user.two_factor_enabled) {
+      if (!token2fa) {
+        return res.json({ mfaRequired: true });
+      }
+
+      const verified = authenticator.check(token2fa, user.two_factor_secret);
+      if (!verified) {
+        return res.status(401).json({ error: 'Código 2FA inválido' });
+      }
+    }
+
     const token = jwt.sign(
       { id: user.id, username: user.username },
       JWT_SECRET,
@@ -34,7 +60,7 @@ router.post('/login', async (req, res) => {
 
     res.json({
       token,
-      user: { id: user.id, username: user.username },
+      user: { id: user.id, username: user.username, twoFactorEnabled: user.two_factor_enabled },
     });
   } catch (err) {
     console.error(err);
@@ -44,30 +70,77 @@ router.post('/login', async (req, res) => {
 
 // GET /api/auth/me
 router.get('/me', async (req, res) => {
+  const decoded = verifyToken(req);
+  if (!decoded) return res.status(401).json({ error: 'Invalid or missing token' });
+  
   try {
-    const auth = req.headers.authorization;
-    if (!auth) return res.status(401).json({ error: 'No token' });
-    const token = auth.split(' ')[1];
-    const decoded = jwt.verify(token, JWT_SECRET);
-    res.json({ user: { id: decoded.id, username: decoded.username } });
-  } catch {
-    res.status(401).json({ error: 'Invalid token' });
+    const db = await getDb();
+    const user = await db.get('SELECT id, username, two_factor_enabled FROM users WHERE id = ?', [decoded.id]);
+    res.json({ user: { id: user.id, username: user.username, twoFactorEnabled: user.two_factor_enabled } });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
   }
 });
+
+// POST /api/auth/setup-2fa
+router.post('/setup-2fa', async (req, res) => {
+  const decoded = verifyToken(req);
+  if (!decoded) return res.status(401).json({ error: 'Unauthorized' });
+
+  try {
+    const secret = authenticator.generateSecret();
+    const otpauthPath = authenticator.keyuri(decoded.username, 'Finanzas Pro', secret);
+    const qrCodeUrl = await qrcode.toDataURL(otpauthPath);
+
+    // Temp store secret in session or handle via frontend confirm
+    // For simplicity, we'll return it and expect the frontend to confirm it with a token
+    res.json({ secret, qrCodeUrl });
+  } catch (err) {
+    res.status(500).json({ error: 'Error setting up 2FA' });
+  }
+});
+
+// POST /api/auth/enable-2fa
+router.post('/enable-2fa', async (req, res) => {
+  const decoded = verifyToken(req);
+  if (!decoded) return res.status(401).json({ error: 'Unauthorized' });
+
+  const { secret, token } = req.body;
+  if (!secret || !token) return res.status(400).json({ error: 'Secret and token required' });
+
+  try {
+    const verified = authenticator.check(token, secret);
+    if (!verified) return res.status(400).json({ error: 'Código inválido. Verifica tu app authenticator.' });
+
+    const db = await getDb();
+    await db.run('UPDATE users SET two_factor_secret = ?, two_factor_enabled = TRUE WHERE id = ?', [secret, decoded.id]);
+
+    res.json({ message: '2FA activado correctamente' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error enabling 2FA' });
+  }
+});
+
+// POST /api/auth/disable-2fa
+router.post('/disable-2fa', async (req, res) => {
+  const decoded = verifyToken(req);
+  if (!decoded) return res.status(401).json({ error: 'Unauthorized' });
+
+  try {
+    const db = await getDb();
+    await db.run('UPDATE users SET two_factor_enabled = FALSE, two_factor_secret = NULL WHERE id = ?', [decoded.id]);
+    res.json({ message: '2FA desactivado correctamente' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error disabling 2FA' });
+  }
+});
+
 // POST /api/auth/change-password
 router.post('/change-password', async (req, res) => {
-  try {
-    const auth = req.headers.authorization;
-    if (!auth) return res.status(401).json({ error: 'No token' });
-    
-    let decoded;
-    try {
-      const token = auth.split(' ')[1];
-      decoded = jwt.verify(token, JWT_SECRET);
-    } catch {
-      return res.status(401).json({ error: 'Invalid token' });
-    }
+  const decoded = verifyToken(req);
+  if (!decoded) return res.status(401).json({ error: 'Unauthorized' });
 
+  try {
     const { currentPassword, newPassword } = req.body;
     if (!currentPassword || !newPassword) {
       return res.status(400).json({ error: 'Faltan campos obligatorios' });

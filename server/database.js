@@ -1,44 +1,86 @@
-const { open } = require('sqlite');
-const sqlite3 = require('sqlite3');
-const path = require('path');
+const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 
-let db;
+// Connection string from Supabase
+const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:admin123@db.sqysuuxscfmheejdrrld.supabase.co:5432/postgres';
+
+const pool = new Pool({
+  connectionString,
+  ssl: {
+    rejectUnauthorized: false // Required for Supabase/Vercel
+  }
+});
+
+let dbWrapper;
 
 async function getDb() {
-  if (!db) {
-    db = await open({
-      filename: path.join(__dirname, 'data', 'finanzas.sqlite'),
-      driver: sqlite3.Database,
-    });
+  if (!dbWrapper) {
+    // Compatibility wrapper to avoid changing all route files
+    dbWrapper = {
+      async get(sql, params = []) {
+        const res = await pool.query(sql.replace(/\?/g, (match, i) => `$${params.indexOf(params[i]) + 1}`), params);
+        // Basic positional replacement for SQLite style params (?) to Postgres ($1, $2...)
+        // Note: This is a simple replacement logic for common queries. 
+        // For complex queries, we might need a more robust parser.
+        let sqliteSql = sql;
+        let pIndex = 1;
+        while (sqliteSql.includes('?')) {
+          sqliteSql = sqliteSql.replace('?', `$${pIndex++}`);
+        }
+        const result = await pool.query(sqliteSql, params);
+        return result.rows[0];
+      },
+      async all(sql, params = []) {
+        let sqliteSql = sql;
+        let pIndex = 1;
+        while (sqliteSql.includes('?')) {
+          sqliteSql = sqliteSql.replace('?', `$${pIndex++}`);
+        }
+        const result = await pool.query(sqliteSql, params);
+        return result.rows;
+      },
+      async run(sql, params = []) {
+        let sqliteSql = sql;
+        let pIndex = 1;
+        while (sqliteSql.includes('?')) {
+          sqliteSql = sqliteSql.replace('?', `$${pIndex++}`);
+        }
+        const result = await pool.query(sqliteSql, params);
+        return { lastID: null, changes: result.rowCount };
+      },
+      async exec(sql) {
+        return await pool.query(sql);
+      }
+    };
     await initSchema();
   }
-  return db;
+  return dbWrapper;
 }
 
 async function initSchema() {
-  await db.exec(`
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       username TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      two_factor_secret TEXT,
+      two_factor_enabled BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
     );
 
     CREATE TABLE IF NOT EXISTS categories (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       name TEXT NOT NULL,
       icon TEXT DEFAULT '💳',
       color TEXT DEFAULT '#6366f1',
-      user_id INTEGER,
-      FOREIGN KEY (user_id) REFERENCES users(id)
+      user_id INTEGER REFERENCES users(id)
     );
 
     CREATE TABLE IF NOT EXISTS transactions (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       year INTEGER NOT NULL,
       month INTEGER NOT NULL,
-      category_id INTEGER NOT NULL,
+      category_id INTEGER NOT NULL REFERENCES categories(id),
       amount REAL NOT NULL DEFAULT 0,
       status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('paid','pending')),
       due_date TEXT,
@@ -46,18 +88,17 @@ async function initSchema() {
       notes TEXT,
       tags TEXT,
       receipt_url TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (category_id) REFERENCES categories(id)
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
     );
 
     CREATE TABLE IF NOT EXISTS backups (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       label TEXT,
       year INTEGER,
       month INTEGER,
       data TEXT NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
     );
 
     CREATE TABLE IF NOT EXISTS settings (
@@ -66,27 +107,28 @@ async function initSchema() {
     );
   `);
 
-  // Silent alter table for existing DBs
+  // Check for 2FA columns (in case table already existed)
   try {
-    await db.exec(`ALTER TABLE transactions ADD COLUMN receipt_url TEXT;`);
-    console.log('✅ Added receipt_url column to existing schema');
+    await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS two_factor_secret TEXT;');
+    await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS two_factor_enabled BOOLEAN DEFAULT FALSE;');
+    console.log('✅ Checked/Added 2FA columns to users table');
   } catch (err) {
-    // Column might already exist, ignore safely
+    console.error('Error adding 2FA columns:', err.message);
   }
 
   // Seed default users if none exist
-  const userCount = await db.get('SELECT COUNT(*) as count FROM users');
-  if (userCount.count === 0) {
+  const userCount = await pool.query('SELECT COUNT(*) as count FROM users');
+  if (parseInt(userCount.rows[0].count) === 0) {
     const hash1 = await bcrypt.hash('admin123', 10);
     const hash2 = await bcrypt.hash('user123', 10);
-    await db.run('INSERT INTO users (username, password) VALUES (?, ?)', ['admin', hash1]);
-    await db.run('INSERT INTO users (username, password) VALUES (?, ?)', ['usuario', hash2]);
+    await pool.query('INSERT INTO users (username, password) VALUES ($1, $2)', ['admin', hash1]);
+    await pool.query('INSERT INTO users (username, password) VALUES ($1, $2)', ['usuario', hash2]);
     console.log('✅ Default users created: admin/admin123 and usuario/user123');
   }
 
   // Seed default categories
-  const catCount = await db.get('SELECT COUNT(*) as count FROM categories');
-  if (catCount.count === 0) {
+  const catCount = await pool.query('SELECT COUNT(*) as count FROM categories');
+  if (parseInt(catCount.rows[0].count) === 0) {
     const defaultCategories = [
       { name: 'Luz (Edesa)', icon: '💡', color: '#f59e0b' },
       { name: 'Cochera', icon: '🚗', color: '#3b82f6' },
@@ -97,8 +139,8 @@ async function initSchema() {
       { name: 'Seguro Auto', icon: '🛡️', color: '#ec4899' },
     ];
     for (const cat of defaultCategories) {
-      await db.run(
-        'INSERT INTO categories (name, icon, color) VALUES (?, ?, ?)',
+      await pool.query(
+        'INSERT INTO categories (name, icon, color) VALUES ($1, $2, $3)',
         [cat.name, cat.icon, cat.color]
       );
     }

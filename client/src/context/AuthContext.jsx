@@ -23,8 +23,13 @@ export const AuthProvider = ({ children }) => {
     checkUser();
   }, []);
 
-  const login = async (username, password) => {
-    const res = await api.post('/auth/login', { username, password });
+  const login = async (username, password, token2fa = null) => {
+    const res = await api.post('/auth/login', { username, password, token2fa });
+    
+    if (res.data.mfaRequired) {
+      return res.data; // Return to UI to show 2FA prompt
+    }
+
     localStorage.setItem('token', res.data.token);
     setUser(res.data.user);
     return res.data;
