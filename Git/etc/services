@@ -1,0 +1,190 @@
+# Copyright (c) 1993-1999 Microsoft Corp.
+#
+# Este archivo contiene números de puerto para los servicios más conocidos
+# tal y como están definidos por RFC 1700 (Assigned Numbers).
+#                             
+#
+# Formato:
+#
+# <nombre de servicio> <número de puerto>/<protocolo> [alias...] [#<comentario>]
+#
+#---------------------------- ULTIMA ACTUALIZACIÓN: Diciembre de 2011 ---------------------------------
+#
+#---------------------- ctsql asignado a puerto 5558 - CARAVEL - Electoral UNIX -----------------------
+#
+#----------------------------- MULTILEX usando ctsqlsal por puerto 5556 -------------------------------
+
+gds_db          3050/tcp
+echo                7/tcp
+echo                7/udp
+discard             9/tcp    sink null
+discard             9/udp    sink null
+systat             11/tcp    users                  #Usuarios activos
+systat             11/tcp    users                  #Usuarios activos
+daytime            13/tcp
+daytime            13/udp
+qotd               17/tcp    quote                  #Cuota del día
+qotd               17/udp    quote                  #Cuota del día
+chargen            19/tcp    ttytst source          #Generador del carácter
+chargen            19/udp    ttytst source          #Generador del carácter
+ftp-data           20/tcp                           #FTP, datos
+ftp                21/tcp                           #FTP. control
+telnet             23/tcp
+smtp               25/tcp    mail                   #Protocolo simple de transferencia de correo (SMTP)
+time               37/tcp    timserver
+time               37/udp    timserver
+rlp                39/udp    resource               #Protocolo de ubicación del recurso
+nameserver         42/tcp    name                   #Servidor del nombre host 
+nameserver         42/udp    name                   #Servidor del nombre host 
+nicname            43/tcp    whois
+domain             53/tcp                           #Servidor de nombre-dominio
+domain             53/udp                           #Servidor de nombre-dominio
+bootps             67/udp    dhcps                  #Servidor del protocolo de inicio del sistema
+bootpc             68/udp    dhcpc                  #Servidor del protocolo de inicio del sistema
+tftp               69/udp                           #Transferencia de archivos trivial
+gopher             70/tcp
+finger             79/tcp
+http               80/tcp    www www-http           #World Wide Web
+kerberos-sec       88/tcp    krb5                   #Kerberos
+kerberos-sec       88/udp    krb5                   #Kerberos
+hostname          101/tcp    hostnames              #Servidor del nombre host NIC
+iso-tsap          102/tcp                           #ISO-TSAP Clase 0
+rtelnet           107/tcp                           #Servicio Telnet remoto
+pop2              109/tcp    postoffice             #Protocolo de oficina de correos: versión 2
+pop3              110/tcp                           #Protocolo de oficina de correos: versión 3
+sunrpc            111/tcp    rpcbind portmap        #Llamada de procedimiento remoto SUN 
+sunrpc            111/udp    rpcbind portmap        #Llamada de procedimiento remoto SUN
+auth              113/tcp    ident tap              #Protocolo de identificación
+uucp-path         117/tcp
+nntp              119/tcp    usenet                 #Protocolo de transferencia de noticias a través de la red
+ntp               123/udp                           #Protocolo de tiempo de red
+epmap             135/tcp    loc-srv                #Resolución del extremo DCE
+epmap             135/udp    loc-srv                #Resolución del extremo DCE
+netbios-ns        137/tcp    nbname                 #Servicio de nombre NETBIOS
+netbios-ns        137/udp    nbname                 #Servicio de nombre NETBIOS
+netbios-dgm       138/udp    nbdatagram             #Servicio de datagramas NETBIOS
+netbios-ssn       139/tcp    nbsession              #Servicio de sesión NETBIOS
+imap              143/tcp    imap4                  #Protocolo de acceso de mensajes de Internet
+pcmail-srv        158/tcp                           #Servidor PCMail
+snmp              161/udp                           #SNMP
+snmptrap          162/udp    snmp-trap              #Captura SNMP
+print-srv         170/tcp                           #Red PostScript
+bgp               179/tcp                           #Protocolo de puerta de enlace de borde
+irc               194/tcp                           #Protocolo IRC (Internet Relay Chat)        
+ipx               213/udp                           #IPX para IP
+ldap              389/tcp                           #Protocolo de acceso al directorio  de peso ligero
+https             443/tcp    MCom
+https             443/udp    MCom
+microsoft-ds      445/tcp
+microsoft-ds      445/udp
+#? kpasswd           464/tcp                            # Kerberos (v5)
+#? kpasswd           464/udp                            # Kerberos (v5)
+isakmp            500/udp    ike                    #Intercambio de claves de Internet
+exec              512/tcp                           #Ejecución del proceso remoto
+biff              512/udp    comsat
+login             513/tcp                           #Inicio de sesión remoto
+who               513/udp    whod
+cmd               514/tcp    shell
+syslog            514/udp
+printer           515/tcp    spooler
+talk              517/udp
+ntalk             518/udp
+efs               520/tcp                           #Servidor de nombres de archivos extendido
+router            520/udp    route routed
+timed             525/udp    timeserver
+tempo             526/tcp    newdate
+courier           530/tcp    rpc
+conference        531/tcp    chat
+netnews           532/tcp    readnews
+netwall           533/udp                           #Para emisiones de emergencia
+uucp              540/tcp    uucpd
+klogin            543/tcp                           #Kerberos
+kshell            544/tcp    krcmd                  #Kerberos shell remoto
+new-rwho          550/udp    new-who
+remotefs          556/tcp    rfs rfs_server
+rmonitor          560/udp    rmonitord
+monitor           561/udp
+ldaps             636/tcp    sldap                  #LDAP para TLS/SSL
+doom              666/tcp                           #Software del Id. Doom  
+doom              666/udp                           #Software del Id. Doom  
+kerberos-adm      749/tcp                           #Administración Kerberos
+kerberos-adm      749/udp                           #Administración Kerberos
+kpop             1109/tcp                           #Kerberos POP
+phone            1167/udp                           #Llamada de conferencia
+ms-sql-s         1433/tcp                           #Microsoft-SQL-Server 
+ms-sql-s         1433/udp                           #Microsoft-SQL-Server 
+ms-sql-m         1434/tcp                           #Microsoft-SQL-Monitor
+ms-sql-m         1434/udp                           #Microsoft-SQL-Monitor                
+wins             1512/tcp                           #Servicios de nombres Internet de Microsoft Windows (WINS)
+wins             1512/udp                           #Servicios de nombres Internet de Microsoft Windows (WINS)
+ingreslock       1524/tcp    ingres
+l2tp             1701/udp                           #Protocolo de túnel capa 2
+pptp             1723/tcp                           #Protocolo de túnel punto a punto
+radius           1812/udp                           #Protocolo  de autenticación RADIUS
+radacct          1813/udp                           #Protocolo de gestión de cuentas RADIUS
+nfsd             2049/udp    nfs                    #Servidor NFS
+knetd            2053/tcp                           #Desmultiplexor Kerberos 
+ttcp             5001/tcp                           #TTCP
+ttcp             5001/udp                           #TTCP
+man              9535/tcp                           #Servidor remoto MAN
+
+
+#-------------------------------JURISPRUDENCIA BRS/SEARCH ---------------------------------------------------------
+ctsqlbrs        5560/tcp        # BRS SEARCH						(cliente BRS)
+
+#-------------------------------MULTILEX   -------------------------------------------------------------------------
+ctsqlsal	5556/tcp 	# Multilex superpuesto con Caravel	
+
+#-------------------------------CARAVEL   -------------------------------------------------------------------------
+gps		5559/tcp 	# MultiBase Caravel global propourse service		(Caravel Unix)
+ctsql		5558/tcp 	# MultiBase Caravel SQL					(Caravel Unix) 
+#-------------------------------ELECTORAL LINUX o MULTILEX JUZG. CIVILES -------------------------------------------
+#ctsql		5555/tcp 	# MultiBase SQL 				        (Electoral o Multilex Linux)
+
+#-------------------------------ELECTORAL -------------------------------------------------------------------------
+chkux           8989/tcp        # Check Users						(se utiliza en Electoral) 
+ddmsql          9784/tcp        # DDM							(Consulta Interdistrito Unix)
+sielsql		7777/tcp	# Consulta Electoral Interdistrito hacia los Linux	(consulta interdistrito hacia linux)
+
+#-------------------------------ELECTORAL UNIX --------------------------------------------------------------------
+sieSQL          7778/tcp        # SQL Produccion Electoral Unix 
+sieGPS          7779/tcp        # GPS Produccion Electoral Unix
+
+sieCOSQL        7950/tcp        # SQL Produccion Consulados
+sieCOGPS        7951/tcp        # GPS Produccion Consulados				
+siePLSQL        7784/tcp        # SQL Produccion Privados de Libertad 			
+siePLGPS        7785/tcp        # GPS Produccion Privados de Libertad			
+sieAESQL        7956/tcp        # SQL Produccion ARGENTINOS EN EL EXTERIOR		
+sieAEGPS        7957/tcp        # GPS Produccion ARGENTINOS EN EL EXTERIOR		
+sieCCSQL        7962/tcp        # SQL Produccion Carta Ciudadania			
+sieCCGPS        7963/tcp        # GPS Produccion Carta Ciudadania			
+
+#Vieja Consulta Interdistrito Electoral aun se sigue utilizando
+sieC6GPS	7900/tcp	# Camara Nacional Electoral				
+sieC1GPS	7901/tcp	# Capital Federal
+sieB2GPS	7902/tcp	# Buenos Aires (La Plata)
+sieX1GPS	7905/tcp	# Cordoba
+sieF1GPS	7906/tcp	# La Rioja
+sieK1GPS	7907/tcp	# Catamarca
+sieY1GPS	7908/tcp	# Jujuy
+sieT1GPS	7910/tcp	# Tucuman
+sieG1GPS	7911/tcp	# Santiago del Estero
+
+#--------------------------------DESARROLLO ---------------------------------------------------------------------
+# Desarrollo Electoral
+#siedSQL         7780/tcp        # SQL Desarrollo Electoral sie1				
+#siedGPS         7781/tcp        # GPS Desarrollo Electoral sie1				
+
+#siecSQL         7782/tcp        # SQL Central Electoral sie2                            
+#siecGPS         7783/tcp        # GPS Central Electoral sie2				
+
+#siedCCSQL       7964/tcp        # SQL Desarrollo Carta Ciudadania			
+#siedCCGPS       7965/tcp        # GPS Desarrollo Carta Ciudadania			
+#siedCOSQL       7952/tcp        # SQL Desarrollo Consulados				
+#siedCOGPS       7953/tcp        # GPS Desarrollo Consulados				
+#siedAESQL       7958/tcp        # SQL Desarrollo Argentinos Exterior			
+#siedAEGPS       7959/tcp        # GPS Desarrollo Argentinos Exterior			
+
+# Desarrollo Caravel UNIX
+#ctsqlc1	5551/tcp	# Multibase (Service Desarrollo C1)			(EN Unix entorno desarrollo para C1) 
+#gpsc1		5571/tcp 	# MultiBase Caravel global propourse service		(EN Unix entorno desarrollo para C1) 

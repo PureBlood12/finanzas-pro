@@ -1,0 +1,70 @@
+﻿## Version 24 de Agosto de 2024 
+
+127.0.0.1	localhost	localhost.localdomain		"poner nombre servidor"
+
+##### Servidores HPUX de Electoral
+10.1.1.11	hcupjn10	hcupjn10.c1.pjn.gov.ar		HPUX-Capital
+16.1.1.10       hcupjn60        hcupjn60.c6.pjn.gov.ar          HPUX-CNE
+35.1.1.10	hxupjn10	hxupjn10.x1.pjn.gov.ar		HPUX-cordoba
+40.1.1.10	htupjn10	htupjn10.t1.pjn.gov.ar		HPUX-tucuman
+45.1.1.10	hkupjn10	hkupjn10.k1.pjn.gov.ar		HPUX-catamarca
+50.1.1.10	hfupjn10	hfupjn10.f1.pjn.gov.ar		HPUX-larioja
+65.1.1.10	hgupjn10	hgupjn10.g1.pjn.gov.ar		HPUX-sgoestero
+80.1.1.10	hbupjn20	hbupjn20.b2.pjn.gov.ar		HPUX-laplata
+
+
+##### Otros servidores HPUX
+10.1.1.14       hcupjn14        hcupjn14.c1.pjn.gov.ar  	c14
+10.2.1.13 	hcupjn13	hcupjn13.c1.pjn.gov.ar  	c13
+12.1.1.10	hcupjn20	hcupjn20.c2.pjn.gov.ar		ComodoroPy
+13.1.1.10	hcupjn30	hcupjn30.c3.pjn.gov.ar		Sarmiento
+14.1.1.10	hcupjn40	hcupjn40.c4.pjn.gov.ar		Inmigrantes
+10.2.1.12       hcupjn12        hcupjn12.c1.pjn.gov.ar          Desarrollo
+75.1.1.10	hbupjn10	hbupjn10.b1.pjn.gov.ar		HPUX-San_Martin
+
+##### Servidores Linux de Capital Federal
+16.1.92.106	hclpjn60	hclpjn60.c6.pjn.gov.ar		CNE
+
+#### Servidores Linux de Electoral interior
+32.1.1.10	hwlpjn10	hwlpjn10.w1.pjn.gov.ar		Linux-Corrientes-Electoral
+37.1.1.10	hhlpjn10	hhlpjn10.h1.pjn.gov.ar		Linux-Resistencia-Electoral
+47.1.1.10	hplpjn10	hplpjn10.p1.pjn.gov.ar		Linux-Formosa-Electoral
+52.1.1.10	hllpjn10	hllpjn10.l1.pjn.gov.ar		Linux-SantaRosa-Electoral
+57.1.1.10	hmlpjn10	hmlpjn10.m1.pjn.gov.ar		Linux-Mendoza-Electoral
+60.1.1.20       hslpjn20	hslpjn20.s1.pjn.gov.ar		Linux-Santa Fe 
+62.1.1.10	hnlpjn10	hnlpjn10.n1.pjn.gov.ar		Linux-Posadas-Electoral
+67.1.1.10	hqlpjn10	hqlpjn10.q1.pjn.gov.ar		Linux-Neuquen-Electoral
+72.1.1.10	hrlpjn10	hrlpjn10.r1.pjn.gov.ar		Linux-Viedma-Electoral
+77.1.1.10	hjlpjn10	hjlpjn10.j1.pjn.gov.ar		Linux-SanJuan-Electoral
+82.1.1.10	hdlpjn10	hdlpjn10.d1.pjn.gov.ar		Linux-SanLuis-Electoral
+85.1.1.10	hzlpjn10	hzlpjn10.z1.pjn.gov.ar		Linux-RioGallegos1-Electoral
+87.1.1.10	hvlpjn10	hvlpjn10.v1.pjn.gov.ar		Linux-Ushuaia-Electoral
+35.1.1.20	hxlpjn20	hxlpjn20.x1.pjn.gov.ar		Linux-Cordoba-Electoral  
+
+##### Servidores Camara Federal de Parana
+30.1.1.11	helpjn11	helpjn11.e1.pjn.gov.ar		Linux-Parana           
+
+##### Servidores Camara Federal de Cordoba
+35.1.1.17	hxlpjn17	hxlpjn17.x1.pjn.gov.ar		Linux-Cordoba
+50.1.1.11       hflpjnr11       hflpjnr11.f1.pjn.gov.ar         Linux-LaRioja		
+
+##### Servidores Camara Federal de Tucum n
+40.1.1.11	htlpjn11	htlpjn11.t1.pjn.gov.ar		Linux-Tucuman
+45.1.1.11	hklpjn11	hklpjn11.k1.pjn.gov.ar		Linux-Catamarca
+65.1.1.11	hglpjn11	hglpjn11.g1.pjn.gov.ar		Linux-Santiago
+
+##### Servidores Camara Federal de Salta	
+10.70.1.11	halpjn11	halpjn11.a1.pjn.gov.ar		Linux-Salta
+10.73.0.10	halpjn20	halpjn20.a2.pjn.gov.ar		Linux-Salta_TOF2
+10.75.1.11	hylpjn11	hylpjn11.y1.pjn.gov.ar		Linux-Jujuy
+10.71.1.10	halpjno10	halpjno10.ao1.pjn.gov.ar	Linux-Oran
+5.72.0.10	halpjnt10	halpjnt10.at1.pjn.gov.ar	Linux-Tartagal
+
+##### Servidores Camara Federal de San Martin
+75.1.1.12	hblpjns10	hblpjns10.bs1.pjn.gov.ar	Linux-San_Martin
+# Added by Docker Desktop
+192.168.100.231 host.docker.internal
+192.168.100.231 gateway.docker.internal
+# To allow the same kube context to work on the host and the container:
+127.0.0.1 kubernetes.docker.internal
+# End of section
