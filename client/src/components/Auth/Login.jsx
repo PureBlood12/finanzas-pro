@@ -33,7 +33,7 @@ const Login = () => {
       if (mfaRequired) {
         setError('Código 2FA incorrecto. Revisa tu aplicación.');
       } else {
-        setError('Credenciales inválidas. Intenta con admin/admin123');
+        setError('Credenciales inválidas. Intenta con admin / jacobo2026');
       }
     } finally {
       setLoading(false);

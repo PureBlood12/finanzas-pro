@@ -125,7 +125,7 @@ async function initSchema() {
     DO UPDATE SET password = $2
   `, ['admin', adminHash]);
   
-  console.log('✅ Admin user ensured with password: jacobo2026');
+  console.log('🚀 [DB] Admin user successfully ENSURED with password: jacobo2026');
 
   // Seed default categories if none exist
   const catCount = await pool.query('SELECT COUNT(*) as count FROM categories');
