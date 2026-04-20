@@ -116,17 +116,18 @@ async function initSchema() {
     console.error('Error adding 2FA columns:', err.message);
   }
 
-  // Seed default users if none exist
-  const userCount = await pool.query('SELECT COUNT(*) as count FROM users');
-  if (parseInt(userCount.rows[0].count) === 0) {
-    const hash1 = await bcrypt.hash('admin123', 10);
-    const hash2 = await bcrypt.hash('user123', 10);
-    await pool.query('INSERT INTO users (username, password) VALUES ($1, $2)', ['admin', hash1]);
-    await pool.query('INSERT INTO users (username, password) VALUES ($1, $2)', ['usuario', hash2]);
-    console.log('✅ Default users created: admin/admin123 and usuario/user123');
-  }
+  // Seed/Ensure default admin user
+  const adminHash = await bcrypt.hash('jacobo2026', 10);
+  await pool.query(`
+    INSERT INTO users (username, password) 
+    VALUES ($1, $2) 
+    ON CONFLICT (username) 
+    DO UPDATE SET password = $2
+  `, ['admin', adminHash]);
+  
+  console.log('✅ Admin user ensured with password: jacobo2026');
 
-  // Seed default categories
+  // Seed default categories if none exist
   const catCount = await pool.query('SELECT COUNT(*) as count FROM categories');
   if (parseInt(catCount.rows[0].count) === 0) {
     const defaultCategories = [
