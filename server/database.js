@@ -1,24 +1,32 @@
 const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 
-// [SELF-HEALING] Connection logic that fixes bad environment variables on the fly
-let connectionString = process.env.DATABASE_URL || 'postgresql://postgres:admin123@db.sqysuuxscfmheejdrrld.supabase.co:5432/postgres';
-
-// If the URL contains the problematic hostname, we force it to the working Pooler
-if (connectionString.includes('sqysuuxscfmheejdrrld.supabase.co')) {
-  console.log('🩹 [DB] Bad hostname detected. Auto-correcting to Pooler...');
-  const pass = connectionString.match(/:([^@]+)@/)?.[1] || 'admin123';
-  connectionString = `postgresql://postgres.sqysuuxscfmheejdrrld:${pass}@aws-0-sa-east-1.pooler.supabase.com:6543/postgres?sslmode=require`;
-}
-
-console.log('📡 [DB] Connecting to host:', connectionString.split('@')[1].split(':')[0]);
-
-const pool = new Pool({
-  connectionString,
+// Explicit configuration for Supabase Pooler (Best for Vercel)
+const poolConfig = {
+  host: 'aws-0-sa-east-1.pooler.supabase.com',
+  port: 6543,
+  user: 'postgres.sqysuuxscfmheejdrrld',
+  password: 'admin123',
+  database: 'postgres',
   ssl: {
-    rejectUnauthorized: false // Required for Supabase/Vercel
-  }
-});
+    rejectUnauthorized: false
+  },
+  max: 10, // Adjust based on needs
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+};
+
+// Override with DATABASE_URL only if it exists and we are NOT forcing a fix
+let pool;
+if (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('sqysuuxscfmheejdrrld')) {
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
+  });
+} else {
+  console.log('📡 [DB] Using explicit Pooler config for sa-east-1');
+  pool = new Pool(poolConfig);
+}
 
 let dbWrapper;
 
