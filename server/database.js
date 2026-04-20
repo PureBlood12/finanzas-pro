@@ -1,10 +1,10 @@
 const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 
-// Explicit configuration for Supabase Pooler (Confirmed working for sa-east-1)
+// Explicit configuration for Supabase (Using Port 5432 for DDL permissions)
 const poolConfig = {
   host: 'aws-1-sa-east-1.pooler.supabase.com',
-  port: 6543,
+  port: 5432, // Port 5432 supports CREATE TABLE and other DDL operations
   user: 'postgres.sqysuuxacfmheejdrrld',
   password: 'ojsB02Mx3nnZyJvO',
   database: 'postgres',
@@ -13,7 +13,7 @@ const poolConfig = {
   },
   max: 10,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000, // Slightly longer timeout for sa-east-1 from Vercel
+  connectionTimeoutMillis: 5000,
 };
 
 // Override with DATABASE_URL only if it exists and we are NOT forcing a fix
