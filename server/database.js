@@ -1,19 +1,19 @@
 const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 
-// Explicit configuration for Supabase Pooler (Best for Vercel)
+// Explicit configuration for Supabase Pooler (Confirmed working for sa-east-1)
 const poolConfig = {
-  host: 'aws-0-sa-east-1.pooler.supabase.com',
+  host: 'aws-1-sa-east-1.pooler.supabase.com',
   port: 6543,
-  user: 'postgres.sqysuuxscfmheejdrrld',
-  password: 'admin123',
+  user: 'postgres.sqysuuxacfmheejdrrld',
+  password: 'ojsB02Mx3nnZyJvO',
   database: 'postgres',
   ssl: {
     rejectUnauthorized: false
   },
-  max: 10, // Adjust based on needs
+  max: 10,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  connectionTimeoutMillis: 5000, // Slightly longer timeout for sa-east-1 from Vercel
 };
 
 // Override with DATABASE_URL only if it exists and we are NOT forcing a fix
