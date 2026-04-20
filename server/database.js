@@ -75,40 +75,31 @@ async function getDb() {
 }
 
 async function initSchema() {
-  console.log('🏗️ [DB] Initializing schema step-by-step...');
-  
-  // 1. Create users table first
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS users (
+  try {
+    console.log('🏗️ [DB] Initializing schema with public. prefix...');
+    
+    await pool.query(`CREATE TABLE IF NOT EXISTS public.users (
       id SERIAL PRIMARY KEY,
       username TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL,
       two_factor_secret TEXT,
       two_factor_enabled BOOLEAN DEFAULT FALSE,
       created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-    );
-  `);
-  console.log('✅ Users table ready');
+    );`);
 
-  // 2. Create categories table
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS categories (
+    await pool.query(`CREATE TABLE IF NOT EXISTS public.categories (
       id SERIAL PRIMARY KEY,
       name TEXT NOT NULL,
       icon TEXT DEFAULT '💳',
       color TEXT DEFAULT '#6366f1',
-      user_id INTEGER REFERENCES users(id)
-    );
-  `);
-  console.log('✅ Categories table ready');
+      user_id INTEGER REFERENCES public.users(id)
+    );`);
 
-  // 3. Create transactions table (Now called transactions to match finance logic)
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS transactions (
+    await pool.query(`CREATE TABLE IF NOT EXISTS public.transactions (
       id SERIAL PRIMARY KEY,
       year INTEGER NOT NULL,
       month INTEGER NOT NULL,
-      category_id INTEGER NOT NULL REFERENCES categories(id),
+      category_id INTEGER NOT NULL REFERENCES public.categories(id),
       amount REAL NOT NULL DEFAULT 0,
       status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('paid','pending')),
       due_date TEXT,
@@ -118,14 +109,17 @@ async function initSchema() {
       receipt_url TEXT,
       created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-    );
-  `);
-  console.log('✅ Transactions table ready');
+    );`);
 
-  // 4. Other auxiliary tables
-  await pool.query('CREATE TABLE IF NOT EXISTS backups (id SERIAL PRIMARY KEY, label TEXT, year INTEGER, month INTEGER, data TEXT NOT NULL, created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP);');
-  await pool.query('CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT);');
-  console.log('✅ Auxiliary tables ready');
+    await pool.query('CREATE TABLE IF NOT EXISTS public.backups (id SERIAL PRIMARY KEY, label TEXT, year INTEGER, month INTEGER, data TEXT NOT NULL, created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP);');
+    await pool.query('CREATE TABLE IF NOT EXISTS public.settings (key TEXT PRIMARY KEY, value TEXT);');
+    
+    console.log('✅ Schema initialized successfully');
+  } catch (err) {
+    console.error('❌ Schema initialization FAILED:', err.message);
+    throw new Error(`Fallo al crear tablas en Supabase: ${err.message}`);
+  }
+}
 
   // Check for 2FA columns (in case table already existed)
   try {
