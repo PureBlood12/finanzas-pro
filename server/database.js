@@ -1,8 +1,14 @@
 const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 
-// Connection string from Supabase
-const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:admin123@db.sqysuuxscfmheejdrrld.supabase.co:5432/postgres';
+// Connection string logic using Supabase Pooler (Recommended for Vercel/Serverless)
+const PROJECT_ID = 'sqysuuxscfmheejdrrld';
+const REGION = 'sa-east-1'; // South America (São Paulo)
+const DB_PASS = 'admin123';
+
+const connectionString = process.env.DATABASE_URL || `postgresql://postgres.${PROJECT_ID}:${DB_PASS}@aws-0-${REGION}.pooler.supabase.com:6543/postgres?sslmode=require`;
+
+console.log('📡 [DB] Connecting via Pooler to region:', REGION);
 
 const pool = new Pool({
   connectionString,
