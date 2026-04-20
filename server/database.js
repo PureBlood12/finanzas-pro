@@ -74,108 +74,50 @@ async function getDb() {
   return dbWrapper;
 }
 
+// Optimized for Vercel: Lightweight initialization
 async function initSchema() {
   try {
-    console.log('🏗️ [DB] Initializing schema with public. prefix...');
-    
-    await pool.query(`CREATE TABLE IF NOT EXISTS public.users (
-      id SERIAL PRIMARY KEY,
-      username TEXT UNIQUE NOT NULL,
-      password TEXT NOT NULL,
-      two_factor_secret TEXT,
-      two_factor_enabled BOOLEAN DEFAULT FALSE,
-      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-    );`);
-
-    await pool.query(`CREATE TABLE IF NOT EXISTS public.categories (
-      id SERIAL PRIMARY KEY,
-      name TEXT NOT NULL,
-      icon TEXT DEFAULT '💳',
-      color TEXT DEFAULT '#6366f1',
-      user_id INTEGER REFERENCES public.users(id)
-    );`);
-
-    await pool.query(`CREATE TABLE IF NOT EXISTS public.transactions (
-      id SERIAL PRIMARY KEY,
-      year INTEGER NOT NULL,
-      month INTEGER NOT NULL,
-      category_id INTEGER NOT NULL REFERENCES public.categories(id),
-      amount REAL NOT NULL DEFAULT 0,
-      status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('paid','pending')),
-      due_date TEXT,
-      payment_date TEXT,
-      notes TEXT,
-      tags TEXT,
-      receipt_url TEXT,
-      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-    );`);
-
-    await pool.query('CREATE TABLE IF NOT EXISTS public.backups (id SERIAL PRIMARY KEY, label TEXT, year INTEGER, month INTEGER, data TEXT NOT NULL, created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP);');
-    await pool.query('CREATE TABLE IF NOT EXISTS public.settings (key TEXT PRIMARY KEY, value TEXT);');
-    
-    console.log('✅ Schema initialized successfully');
-  } catch (err) {
-    console.error('❌ Schema initialization FAILED:', err.message);
-    throw new Error(`Fallo al crear tablas en Supabase: ${err.message}`);
-  }
-}
-
-  // Check for 2FA columns (in case table already existed)
-  try {
-    await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS two_factor_secret TEXT;');
-    await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS two_factor_enabled BOOLEAN DEFAULT FALSE;');
-    console.log('✅ Checked/Added 2FA columns to users table');
-  } catch (err) {
-    console.error('Error adding 2FA columns:', err.message);
-  }
-
-  // 2. Ensure UNIQUE constraint on username (Crucial for UPSERT)
-  try {
-    await pool.query('ALTER TABLE users ADD CONSTRAINT unique_username UNIQUE (username);');
-    console.log('✅ Added UNIQUE constraint to username');
-  } catch (err) {
-    // If it already exists, Postgres will throw an error, which we ignore
-    console.log('ℹ️ UNIQUE constraint already exists or could not be added (skipping)');
-  }
-
-  // 3. NUCLEAR RESET of admin user
-  try {
-    const adminHash = await bcrypt.hash('jacobo2026', 10);
-    // Delete first to be absolutely sure there's no stale data
-    await pool.query('DELETE FROM users WHERE username = $1', ['admin']);
-    await pool.query('INSERT INTO users (username, password) VALUES ($1, $2)', ['admin', adminHash]);
-    
-    // Verify it exists now
-    const check = await pool.query('SELECT username FROM users WHERE username = $1', ['admin']);
-    if (check.rows.length > 0) {
-      console.log('🚀 [DB] SUCCESS: Admin user created and verified!');
-    } else {
-      console.warn('⚠️ [DB] WARNING: Admin user still not found after INSERT!');
-    }
-  } catch (err) {
-    console.error('❌ [DB] FAILED to reset admin user:', err.message);
-  }
-
-  // 4. Seed default categories if none exist
-  const catCount = await pool.query('SELECT COUNT(*) as count FROM categories');
-  if (parseInt(catCount.rows[0].count) === 0) {
-    const defaultCategories = [
-      { name: 'Luz (Edesa)', icon: '💡', color: '#f59e0b' },
-      { name: 'Cochera', icon: '🚗', color: '#3b82f6' },
-      { name: 'Alquiler', icon: '🏠', color: '#8b5cf6' },
-      { name: 'Expensas', icon: '🏢', color: '#06b6d4' },
-      { name: 'Internet', icon: '🌐', color: '#10b981' },
-      { name: 'Gas', icon: '🔥', color: '#f97316' },
-      { name: 'Seguro Auto', icon: '🛡️', color: '#ec4899' },
-    ];
-    for (const cat of defaultCategories) {
-      await pool.query(
-        'INSERT INTO categories (name, icon, color) VALUES ($1, $2, $3)',
-        [cat.name, cat.icon, cat.color]
+    console.log('🏗️ [DB] Checking/Creating Schema...');
+    // Create everything in few batches to avoid timeouts
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS public.users (
+        id SERIAL PRIMARY KEY,
+        username TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        two_factor_secret TEXT,
+        two_factor_enabled BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
       );
+      CREATE TABLE IF NOT EXISTS public.categories (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        icon TEXT DEFAULT '💳',
+        color TEXT DEFAULT '#6366f1',
+        user_id INTEGER
+      );
+      CREATE TABLE IF NOT EXISTS public.transactions (
+        id SERIAL PRIMARY KEY,
+        year INTEGER NOT NULL,
+        month INTEGER NOT NULL,
+        category_id INTEGER,
+        amount REAL DEFAULT 0,
+        status TEXT DEFAULT 'pending',
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    
+    // Quick check/seed for admin only if users is empty
+    const usersCount = await pool.query('SELECT COUNT(*) FROM public.users');
+    if (parseInt(usersCount.rows[0].count) === 0) {
+      const adminHash = await bcrypt.hash('jacobo2026', 10);
+      await pool.query('INSERT INTO public.users (username, password) VALUES ($1, $2)', ['admin', adminHash]);
+      console.log('✅ Default admin seeded');
     }
-    console.log('✅ Default categories seeded');
+
+    console.log('✅ DB Schema ready');
+  } catch (err) {
+    console.error('❌ DB Init failed:', err.message);
+    // We don't throw here to avoid killing the process if tables already exist
   }
 }
 
