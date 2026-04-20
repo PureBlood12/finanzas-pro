@@ -75,6 +75,9 @@ async function getDb() {
 }
 
 async function initSchema() {
+  console.log('🏗️ [DB] Initializing schema step-by-step...');
+  
+  // 1. Create users table first
   await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
@@ -84,7 +87,11 @@ async function initSchema() {
       two_factor_enabled BOOLEAN DEFAULT FALSE,
       created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
     );
+  `);
+  console.log('✅ Users table ready');
 
+  // 2. Create categories table
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS categories (
       id SERIAL PRIMARY KEY,
       name TEXT NOT NULL,
@@ -92,7 +99,11 @@ async function initSchema() {
       color TEXT DEFAULT '#6366f1',
       user_id INTEGER REFERENCES users(id)
     );
+  `);
+  console.log('✅ Categories table ready');
 
+  // 3. Create transactions table (Now called transactions to match finance logic)
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS transactions (
       id SERIAL PRIMARY KEY,
       year INTEGER NOT NULL,
@@ -108,21 +119,13 @@ async function initSchema() {
       created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
     );
-
-    CREATE TABLE IF NOT EXISTS backups (
-      id SERIAL PRIMARY KEY,
-      label TEXT,
-      year INTEGER,
-      month INTEGER,
-      data TEXT NOT NULL,
-      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-    );
-
-    CREATE TABLE IF NOT EXISTS settings (
-      key TEXT PRIMARY KEY,
-      value TEXT
-    );
   `);
+  console.log('✅ Transactions table ready');
+
+  // 4. Other auxiliary tables
+  await pool.query('CREATE TABLE IF NOT EXISTS backups (id SERIAL PRIMARY KEY, label TEXT, year INTEGER, month INTEGER, data TEXT NOT NULL, created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP);');
+  await pool.query('CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT);');
+  console.log('✅ Auxiliary tables ready');
 
   // Check for 2FA columns (in case table already existed)
   try {
