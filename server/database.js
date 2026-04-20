@@ -1,14 +1,17 @@
 const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 
-// Connection string logic using Supabase Pooler (Recommended for Vercel/Serverless)
-const PROJECT_ID = 'sqysuuxscfmheejdrrld';
-const REGION = 'sa-east-1'; // South America (São Paulo)
-const DB_PASS = 'admin123';
+// [SELF-HEALING] Connection logic that fixes bad environment variables on the fly
+let connectionString = process.env.DATABASE_URL || 'postgresql://postgres:admin123@db.sqysuuxscfmheejdrrld.supabase.co:5432/postgres';
 
-const connectionString = process.env.DATABASE_URL || `postgresql://postgres.${PROJECT_ID}:${DB_PASS}@aws-0-${REGION}.pooler.supabase.com:6543/postgres?sslmode=require`;
+// If the URL contains the problematic hostname, we force it to the working Pooler
+if (connectionString.includes('sqysuuxscfmheejdrrld.supabase.co')) {
+  console.log('🩹 [DB] Bad hostname detected. Auto-correcting to Pooler...');
+  const pass = connectionString.match(/:([^@]+)@/)?.[1] || 'admin123';
+  connectionString = `postgresql://postgres.sqysuuxscfmheejdrrld:${pass}@aws-0-sa-east-1.pooler.supabase.com:6543/postgres?sslmode=require`;
+}
 
-console.log('📡 [DB] Connecting via Pooler to region:', REGION);
+console.log('📡 [DB] Connecting to host:', connectionString.split('@')[1].split(':')[0]);
 
 const pool = new Pool({
   connectionString,
