@@ -14,11 +14,7 @@ const categoryRoutes = require('./routes/categories');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Ensure data directory exists (required for SQLite)
-const dataDir = path.join(__dirname, 'data');
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
-}
+// Note: Database is now PostgreSQL (Supabase)
 
 // Middleware
 app.use(cors());
@@ -47,7 +43,7 @@ if (fs.existsSync(clientDistPath)) {
 async function initDb() {
   try {
     await getDb();
-    console.log('✅ SQLite Database connected and initialized');
+    console.log('✅ PostgreSQL Database connected and initialized');
   } catch (err) {
     console.error('❌ Failed to initialize DB:', err);
   }
@@ -56,7 +52,8 @@ async function initDb() {
 if (process.env.VERCEL) {
   // On Vercel: initialize DB once on cold start, then export app
   initDb();
-} else {
+}
+ else {
   // Local / Render: start HTTP server normally
   initDb().then(() => {
     app.listen(PORT, '0.0.0.0', () => {
