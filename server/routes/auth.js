@@ -8,6 +8,33 @@ const { getDb } = require('../database');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'finanzas-pro-secret-2024';
 
+// [DEBUG] Diagnóstico de base de datos
+router.get('/debug-db', async (req, res) => {
+  try {
+    const db = await getDb();
+    const users = await db.all('SELECT id, username FROM users');
+    const categories = await db.all('SELECT COUNT(*) as count FROM categories');
+    
+    res.json({
+      status: 'success',
+      message: 'Conexión a DB operativa',
+      data: {
+        total_users: users.length,
+        users_list: users.map(u => u.username),
+        categories_count: categories[0].count,
+        db_type: 'PostgreSQL (Supabase)'
+      }
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Fallo de conexión a la base de datos',
+      error: err.message,
+      stack: err.stack
+    });
+  }
+});
+
 // Helper to verify token from headers
 const verifyToken = (req) => {
   const auth = req.headers.authorization;
