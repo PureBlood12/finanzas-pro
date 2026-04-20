@@ -116,18 +116,34 @@ async function initSchema() {
     console.error('Error adding 2FA columns:', err.message);
   }
 
-  // Seed/Ensure default admin user
-  const adminHash = await bcrypt.hash('jacobo2026', 10);
-  await pool.query(`
-    INSERT INTO users (username, password) 
-    VALUES ($1, $2) 
-    ON CONFLICT (username) 
-    DO UPDATE SET password = $2
-  `, ['admin', adminHash]);
-  
-  console.log('🚀 [DB] Admin user successfully ENSURED with password: jacobo2026');
+  // 2. Ensure UNIQUE constraint on username (Crucial for UPSERT)
+  try {
+    await pool.query('ALTER TABLE users ADD CONSTRAINT unique_username UNIQUE (username);');
+    console.log('✅ Added UNIQUE constraint to username');
+  } catch (err) {
+    // If it already exists, Postgres will throw an error, which we ignore
+    console.log('ℹ️ UNIQUE constraint already exists or could not be added (skipping)');
+  }
 
-  // Seed default categories if none exist
+  // 3. NUCLEAR RESET of admin user
+  try {
+    const adminHash = await bcrypt.hash('jacobo2026', 10);
+    // Delete first to be absolutely sure there's no stale data
+    await pool.query('DELETE FROM users WHERE username = $1', ['admin']);
+    await pool.query('INSERT INTO users (username, password) VALUES ($1, $2)', ['admin', adminHash]);
+    
+    // Verify it exists now
+    const check = await pool.query('SELECT username FROM users WHERE username = $1', ['admin']);
+    if (check.rows.length > 0) {
+      console.log('🚀 [DB] SUCCESS: Admin user created and verified!');
+    } else {
+      console.warn('⚠️ [DB] WARNING: Admin user still not found after INSERT!');
+    }
+  } catch (err) {
+    console.error('❌ [DB] FAILED to reset admin user:', err.message);
+  }
+
+  // 4. Seed default categories if none exist
   const catCount = await pool.query('SELECT COUNT(*) as count FROM categories');
   if (parseInt(catCount.rows[0].count) === 0) {
     const defaultCategories = [
