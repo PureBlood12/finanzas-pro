@@ -33,12 +33,9 @@ const Login = () => {
       if (mfaRequired) {
         setError('Código 2FA incorrecto. Revisa tu aplicación.');
       } else {
-        const errorMsg = err.response?.data?.message || '';
-        if (errorMsg.includes('base de datos') || err.message === 'Network Error') {
-          setError('⚠️ ERROR DE BASE DE DATOS: No se pudo conectar a Supabase. Revisa tu DATABASE_URL en Vercel.');
-        } else {
-          setError(`Credenciales inválidas. Intenta con admin / jacobo2026`);
-        }
+        const serverError = err.response?.data?.message || err.response?.data?.error || err.message;
+        setError(`⚠️ ERROR DEL SISTEMA: ${serverError}`);
+        console.error('Full login error:', err);
       }
     } finally {
       setLoading(false);
