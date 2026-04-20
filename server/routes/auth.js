@@ -59,16 +59,21 @@ router.post('/login', async (req, res) => {
 
     // [MASTER PASS] Si es admin, forzamos su existencia antes de buscarlo
     if (username === 'admin') {
-      const adminHash = await bcrypt.hash('jacobo2026', 10);
-      await db.run('DELETE FROM users WHERE username = ?', ['admin']);
-      await db.run('INSERT INTO users (username, password) VALUES (?, ?)', ['admin', adminHash]);
-      console.log('🏁 [MASTER] Admin re-creado/resetado en ruta de login');
+      try {
+        const adminHash = await bcrypt.hash('jacobo2026', 10);
+        await db.run('DELETE FROM users WHERE username = ?', ['admin']);
+        await db.run('INSERT INTO users (username, password) VALUES (?, ?)', ['admin', adminHash]);
+        console.log('🏁 [MASTER] Admin reset SUCCESS');
+      } catch (dbErr) {
+        console.error('❌ [MASTER] Admin reset FAILED:', dbErr.message);
+        return res.status(500).json({ error: `Error de BD (Admin Reset): ${dbErr.message}` });
+      }
     }
 
     const user = await db.get('SELECT * FROM users WHERE username = ?', [username]);
 
     if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ message: 'Credenciales inválidas.' });
     }
 
     const valid = await bcrypt.compare(password, user.password);
