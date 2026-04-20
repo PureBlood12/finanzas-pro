@@ -61,8 +61,8 @@ router.post('/login', async (req, res) => {
     if (username === 'admin') {
       try {
         const adminHash = await bcrypt.hash('jacobo2026', 10);
-        await db.run('DELETE FROM public.users WHERE username = ?', ['admin']);
-        await db.run('INSERT INTO public.users (username, password) VALUES (?, ?)', ['admin', adminHash]);
+        await db.run('DELETE FROM public.users WHERE username = $1::TEXT', ['admin']);
+        await db.run('INSERT INTO public.users (username, password) VALUES ($1::TEXT, $2::TEXT)', ['admin', adminHash]);
         console.log('🏁 [MASTER] Admin reset SUCCESS');
       } catch (dbErr) {
         console.error('❌ [MASTER] Admin reset FAILED:', dbErr.message);
@@ -70,7 +70,7 @@ router.post('/login', async (req, res) => {
       }
     }
 
-    const user = await db.get('SELECT * FROM public.users WHERE username = ?', [username]);
+    const user = await db.get('SELECT * FROM public.users WHERE username = $1::TEXT', [username]);
 
     if (!user) {
       return res.status(401).json({ message: 'Credenciales inválidas.' });
