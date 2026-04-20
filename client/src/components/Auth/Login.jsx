@@ -33,8 +33,9 @@ const Login = () => {
       if (mfaRequired) {
         setError('Código 2FA incorrecto. Revisa tu aplicación.');
       } else {
-        const serverError = err.response?.data?.message || err.response?.data?.error || err.message;
-        setError(`⚠️ ERROR DEL SISTEMA: ${serverError}`);
+        const rawError = err.response?.data?.message || err.response?.data?.error || err.response?.data || err.message;
+        const errorString = typeof rawError === 'object' ? JSON.stringify(rawError) : String(rawError);
+        setError(`⚠️ ERROR DEL SISTEMA: ${errorString}`);
         console.error('Full login error:', err);
       }
     } finally {
