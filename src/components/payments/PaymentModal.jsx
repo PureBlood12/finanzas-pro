@@ -1,40 +1,37 @@
-import React, { useEffect, useState } from 'react'
-import { X, Save, Upload, Trash2, FileText, Loader2, Check } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { 
+  X, 
+  Upload, 
+  CheckCircle, 
+  AlertCircle, 
+  Loader2, 
+  FileText,
+  Copy,
+  Info,
+  CreditCard
+} from 'lucide-react'
 import { supabase } from '../../lib/supabase'
-import { useAuth } from '../../contexts/AuthContext'
 
 const PaymentModal = ({ isOpen, onClose, service, payment, month, year, onSuccess }) => {
-  const { user } = useAuth()
+  const [paidAmount, setPaidAmount] = useState('')
+  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0])
+  const [status, setStatus] = useState('paid')
+  const [notes, setNotes] = useState('')
+  const [file, setFile] = useState(null)
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
-  const [formData, setFormData] = useState({
-    paid_amount: '',
-    payment_date: new Date().toISOString().split('T')[0],
-    status: 'paid',
-    notes: '',
-    receipt_url: ''
-  })
 
   useEffect(() => {
     if (payment) {
-      setFormData({
-        paid_amount: payment.paid_amount || '',
-        payment_date: payment.payment_date || new Date().toISOString().split('T')[0],
-        status: payment.status || 'paid',
-        notes: payment.notes || '',
-        receipt_url: payment.receipt_url || ''
-      })
+      setPaidAmount(payment.paid_amount || '')
+      setPaymentDate(payment.payment_date || new Date().toISOString().split('T')[0])
+      setStatus(payment.status || 'paid')
+      setNotes(payment.notes || '')
     } else if (service) {
-      setFormData({
-        paid_amount: service.estimated_amount || '',
-        payment_date: new Date().toISOString().split('T')[0],
-        status: 'paid',
-        notes: '',
-        receipt_url: ''
-      })
+      setPaidAmount(service.estimated_amount || '')
     }
-  }, [payment, service, isOpen])
+  }, [payment, service])
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0]
@@ -43,8 +40,8 @@ const PaymentModal = ({ isOpen, onClose, service, payment, month, year, onSucces
     setUploading(true)
     try {
       const fileExt = file.name.split('.').pop()
-      const fileName = `${user.id}/${Date.now()}.${fileExt}`
-      const filePath = `receipts/${fileName}`
+      const fileName = `${Math.random()}.${fileExt}`
+      const filePath = `${service.id}/${fileName}`
 
       const { error: uploadError } = await supabase.storage
         .from('receipts')
@@ -56,9 +53,9 @@ const PaymentModal = ({ isOpen, onClose, service, payment, month, year, onSucces
         .from('receipts')
         .getPublicUrl(filePath)
 
-      setFormData(prev => ({ ...prev, receipt_url: publicUrl }))
-    } catch (err) {
-      alert('Error al subir archivo: ' + err.message)
+      setFile(publicUrl)
+    } catch (error) {
+      alert('Error al subir archivo: ' + error.message)
     } finally {
       setUploading(false)
     }
@@ -68,147 +65,224 @@ const PaymentModal = ({ isOpen, onClose, service, payment, month, year, onSucces
     e.preventDefault()
     setLoading(true)
 
-    const payload = {
-      user_id: user.id,
-      service_id: service.id,
-      month,
-      year,
-      paid_amount: parseFloat(formData.paid_amount),
-      payment_date: formData.payment_date,
-      status: formData.status,
-      notes: formData.notes,
-      receipt_url: formData.receipt_url
-    }
-
     try {
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      const payload = {
+        user_id: user.id,
+        service_id: service.id,
+        month,
+        year,
+        paid_amount: parseFloat(paidAmount),
+        payment_date: paymentDate,
+        status,
+        notes,
+        receipt_url: file || payment?.receipt_url
+      }
+
       let error
       if (payment) {
-        ({ error } = await supabase.from('payments').update(payload).eq('id', payment.id))
+        const { error: updateError } = await supabase
+          .from('payments')
+          .update(payload)
+          .eq('id', payment.id)
+        error = updateError
       } else {
-        ({ error } = await supabase.from('payments').insert([payload]))
+        const { error: insertError } = await supabase
+          .from('payments')
+          .insert([payload])
+        error = insertError
       }
 
       if (error) throw error
       onSuccess()
       onClose()
-    } catch (err) {
-      alert('Error: ' + err.message)
+    } catch (error) {
+      alert('Error al guardar: ' + error.message)
     } finally {
       setLoading(false)
     }
   }
 
-  if (!isOpen || !service) return null
+  const copyToClipboard = (text, label) => {
+    navigator.clipboard.writeText(text)
+    alert(`${label} copiado al portapapeles`)
+  }
+
+  if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <motion.div 
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        onClick={onClose} className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
-      />
-      
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.9, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-[32px] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800"
-      >
-        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
-          <div className="flex items-center gap-3">
-            <div className="text-2xl">{service.icon || '💸'}</div>
-            <div>
-              <h2 className="text-xl font-bold">{service.name}</h2>
-              <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Registro de Pago</p>
+    <AnimatePresence>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+        />
+        
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-[32px] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800"
+        >
+          {/* Header */}
+          <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-2xl">
+                {service?.icon || '💸'}
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white">{service?.name}</h2>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Registro de Pago</p>
+              </div>
             </div>
+            <button onClick={onClose} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors">
+              <X size={20} />
+            </button>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors">
-            <X size={20} />
-          </button>
-        </div>
 
-        <form onSubmit={handleSubmit} className="p-8 space-y-6">
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Monto Pagado</label>
-              <div className="relative">
-                <span className="absolute left-4 top-3 text-slate-400 font-bold">$</span>
-                <input 
-                  type="number" step="0.01" required
-                  className="w-full pl-8 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-lg"
-                  value={formData.paid_amount}
-                  onChange={(e) => setFormData({...formData, paid_amount: e.target.value})}
+          <form onSubmit={handleSubmit} className="p-6 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+            
+            {/* Payment Info / Transfer Details */}
+            {(service?.cbu || service?.alias || service?.notes) && (
+              <div className="p-4 bg-primary/5 dark:bg-primary/10 rounded-2xl border border-primary/10 space-y-3">
+                <div className="flex items-center gap-2 text-primary mb-1">
+                  <CreditCard size={16} />
+                  <span className="text-xs font-bold uppercase tracking-wider">Datos para pagar</span>
+                </div>
+                
+                {service.cbu && (
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[10px] text-slate-400 uppercase font-bold">CBU / CVU</p>
+                      <p className="text-sm font-mono font-bold dark:text-slate-200">{service.cbu}</p>
+                    </div>
+                    <button type="button" onClick={() => copyToClipboard(service.cbu, 'CBU')} className="p-2 hover:bg-primary/10 rounded-lg text-primary transition-colors">
+                      <Copy size={16} />
+                    </button>
+                  </div>
+                )}
+
+                {service.alias && (
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[10px] text-slate-400 uppercase font-bold">Alias</p>
+                      <p className="text-sm font-bold dark:text-slate-200">{service.alias}</p>
+                    </div>
+                    <button type="button" onClick={() => copyToClipboard(service.alias, 'Alias')} className="p-2 hover:bg-primary/10 rounded-lg text-primary transition-colors">
+                      <Copy size={16} />
+                    </button>
+                  </div>
+                )}
+
+                {service.notes && (
+                  <div className="flex gap-2 pt-1 border-t border-primary/10 mt-1">
+                    <Info size={14} className="text-primary shrink-0 mt-0.5" />
+                    <p className="text-xs text-slate-600 dark:text-slate-400 italic">{service.notes}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Monto Pagado</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-3 text-slate-400 font-bold">$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    required
+                    value={paidAmount}
+                    onChange={(e) => setPaidAmount(e.target.value)}
+                    className="w-full pl-8 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 focus:ring-primary transition-all font-bold"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Fecha de Pago</label>
+                <input
+                  type="date"
+                  required
+                  value={paymentDate}
+                  onChange={(e) => setPaymentDate(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 focus:ring-primary transition-all font-bold"
                 />
               </div>
             </div>
-            <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Fecha de Pago</label>
-              <input 
-                type="date" required
-                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 focus:ring-primary transition-all"
-                value={formData.payment_date}
-                onChange={(e) => setFormData({...formData, payment_date: e.target.value})}
-              />
-            </div>
-          </div>
 
-          <div>
-            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Estado del Pago</label>
-            <div className="flex gap-2">
-              {['paid', 'pending', 'overdue'].map(status => (
-                <button
-                  key={status}
-                  type="button"
-                  onClick={() => setFormData({...formData, status})}
-                  className={`flex-1 py-3 rounded-2xl text-xs font-bold uppercase tracking-widest transition-all border-2 ${
-                    formData.status === status 
-                      ? 'border-primary bg-primary/10 text-primary' 
-                      : 'border-transparent bg-slate-50 dark:bg-slate-800 text-slate-400'
+            <div>
+              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Estado del Pago</label>
+              <div className="grid grid-cols-3 gap-2">
+                {['paid', 'pending', 'overdue'].map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setStatus(s)}
+                    className={`py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all ${
+                      status === s 
+                        ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-105' 
+                        : 'bg-slate-50 dark:bg-slate-800 text-slate-400 hover:bg-slate-100'
+                    }`}
+                  >
+                    {s === 'paid' ? 'Pagado' : s === 'pending' ? 'Pendiente' : 'Vencido'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Comprobante (Imagen o PDF)</label>
+              <div className="relative">
+                <input
+                  type="file"
+                  accept="image/*,application/pdf"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  id="receipt-upload"
+                />
+                <label
+                  htmlFor="receipt-upload"
+                  className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-[24px] cursor-pointer transition-all ${
+                    file || payment?.receipt_url
+                      ? 'border-emerald-500 bg-emerald-50/30 dark:bg-emerald-900/10'
+                      : 'border-slate-200 dark:border-slate-800 hover:border-primary hover:bg-primary/5'
                   }`}
                 >
-                  {status === 'paid' ? 'Pagado' : status === 'pending' ? 'Pendiente' : 'Vencido'}
-                </button>
-              ))}
+                  {uploading ? (
+                    <Loader2 className="animate-spin text-primary" size={32} />
+                  ) : file || payment?.receipt_url ? (
+                    <>
+                      <CheckCircle className="text-emerald-500 mb-2" size={32} />
+                      <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">¡Comprobante Cargado!</span>
+                      <span className="text-[10px] text-slate-400 mt-1">Haz clic para cambiar</span>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="text-slate-400 mb-2" size={32} />
+                      <span className="text-sm font-bold text-slate-500">Haz click para subir</span>
+                      <span className="text-[10px] text-slate-400">JPG, PNG o PDF</span>
+                    </>
+                  )
+                }
+                </label>
+              </div>
             </div>
-          </div>
 
-          <div>
-            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Comprobante (Imagen o PDF)</label>
-            <div className="flex items-center gap-4">
-              <label className={`flex-1 flex flex-col items-center justify-center border-2 border-dashed rounded-3xl p-6 transition-all cursor-pointer ${formData.receipt_url ? 'border-emerald-200 bg-emerald-50/30 text-emerald-600' : 'border-slate-200 dark:border-slate-700 hover:border-primary hover:bg-slate-50'}`}>
-                {uploading ? (
-                  <Loader2 className="animate-spin text-primary" size={32} />
-                ) : formData.receipt_url ? (
-                  <>
-                    <Check size={32} className="text-emerald-500 mb-2" />
-                    <span className="text-sm font-bold">¡Subido con éxito!</span>
-                  </>
-                ) : (
-                  <>
-                    <Upload size={32} className="text-slate-400 mb-2" />
-                    <span className="text-sm font-bold text-slate-500">Haz click para subir</span>
-                  </>
-                )}
-                <input type="file" className="hidden" accept="image/*,application/pdf" onChange={handleFileUpload} />
-              </label>
-              
-              {formData.receipt_url && (
-                <a href={formData.receipt_url} target="_blank" rel="noreferrer" className="p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl text-slate-500 hover:text-primary transition-all shadow-sm">
-                  <FileText size={24} />
-                </a>
-              )}
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading || uploading}
-            className="w-full py-4 bg-primary text-white font-bold rounded-2xl shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-          >
-            {loading ? 'Guardando...' : <><Save size={20} /> Guardar Registro</>}
-          </button>
-        </form>
-      </motion.div>
-    </div>
+            <button
+              type="submit"
+              disabled={loading || uploading}
+              className="w-full py-4 bg-primary text-white font-bold rounded-2xl shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:scale-100 hover:scale-[1.02] active:scale-95"
+            >
+              {loading ? <Loader2 className="animate-spin" size={20} /> : <><FileText size={20} /> Guardar Registro</>}
+            </button>
+          </form>
+        </motion.div>
+      </div>
+    </AnimatePresence>
   )
 }
 
