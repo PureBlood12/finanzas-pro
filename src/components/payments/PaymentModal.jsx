@@ -96,6 +96,18 @@ const PaymentModal = ({ isOpen, onClose, service, payment, month, year, onSucces
       }
 
       if (error) throw error
+
+      // If it's an installment service and it was just marked as paid, increment the current_installment
+      if (service?.is_installment && status === 'paid') {
+        const nextInstallment = (service.current_installment || 0) + 1
+        if (nextInstallment <= (service.total_installments || 999)) {
+          await supabase
+            .from('services')
+            .update({ current_installment: nextInstallment })
+            .eq('id', service.id)
+        }
+      }
+
       onSuccess()
       onClose()
     } catch (error) {

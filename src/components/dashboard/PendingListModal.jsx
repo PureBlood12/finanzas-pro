@@ -62,9 +62,12 @@ const PendingListModal = ({ isOpen, onClose, services }) => {
                       <div className="flex items-center gap-2">
                         <h4 className="font-bold text-slate-900 dark:text-white leading-tight">{service.name}</h4>
                         {service.is_installment && (
-                          <span className="px-1.5 py-0.5 bg-amber-100 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400 rounded-md text-[8px] font-bold">
-                            {service.current_installment}/{service.total_installments}
-                          </span>
+                          <div className="flex flex-col items-center bg-amber-500 px-2 py-0.5 rounded-lg">
+                            <span className="text-[9px] font-black text-white leading-none">
+                              {service.current_installment}/{service.total_installments}
+                            </span>
+                            <span className="text-[5px] font-black text-white/80 uppercase tracking-tighter">Cuotas</span>
+                          </div>
                         )}
                       </div>
                       <div className="flex items-center gap-2 mt-1">

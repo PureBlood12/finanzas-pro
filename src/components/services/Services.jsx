@@ -132,12 +132,15 @@ const Services = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between">
                     <h3 className="text-xl font-bold text-slate-900 dark:text-white truncate">{service.name}</h3>
                     {service.is_installment && (
-                      <span className="px-2 py-0.5 bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400 rounded-lg text-[10px] font-bold">
-                        {service.current_installment}/{service.total_installments}
-                      </span>
+                      <div className="flex flex-col items-center bg-amber-500 px-3 py-1 rounded-xl shadow-lg shadow-amber-500/20 scale-110">
+                        <span className="text-[10px] font-black text-white leading-tight">
+                          {service.current_installment}/{service.total_installments}
+                        </span>
+                        <span className="text-[6px] font-black text-white/80 uppercase tracking-tighter">Cuotas</span>
+                      </div>
                     )}
                   </div>
                   <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${categories[service.category] || categories.Otro}`}>

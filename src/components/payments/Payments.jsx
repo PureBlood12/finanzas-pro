@@ -128,12 +128,15 @@ const Payments = () => {
                           {isPaid ? <Check size={20} strokeWidth={3} /> : (service.icon || '💸')}
                         </div>
                         <div>
-                          <div className="flex items-center gap-2">
-                            <p className={`font-bold transition-all ${isPaid ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-900 dark:text-white'}`}>{service.name}</p>
+                          <div className="flex items-center gap-3">
+                            <p className={`font-bold text-base transition-all ${isPaid ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-900 dark:text-white'}`}>{service.name}</p>
                             {service.is_installment && (
-                              <span className="px-1.5 py-0.5 bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400 rounded-md text-[9px] font-bold">
-                                {service.current_installment}/{service.total_installments}
-                              </span>
+                              <div className="flex flex-col items-center">
+                                <span className="px-2.5 py-1 bg-amber-500 text-white dark:bg-amber-600 rounded-lg text-[11px] font-black shadow-sm shadow-amber-500/20">
+                                  {service.current_installment}/{service.total_installments}
+                                </span>
+                                <span className="text-[8px] font-black text-amber-600 uppercase tracking-tighter mt-0.5">Cuotas</span>
+                              </div>
                             )}
                           </div>
                           <p className="text-[10px] text-slate-400 uppercase font-bold tracking-tighter">{service.category}</p>
