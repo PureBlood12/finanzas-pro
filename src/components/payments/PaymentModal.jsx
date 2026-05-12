@@ -9,7 +9,8 @@ import {
   FileText,
   Copy,
   Info,
-  CreditCard
+  CreditCard,
+  ExternalLink
 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 
@@ -244,31 +245,44 @@ const PaymentModal = ({ isOpen, onClose, service, payment, month, year, onSucces
                   className="hidden"
                   id="receipt-upload"
                 />
-                <label
-                  htmlFor="receipt-upload"
-                  className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-[24px] cursor-pointer transition-all ${
-                    file || payment?.receipt_url
-                      ? 'border-emerald-500 bg-emerald-50/30 dark:bg-emerald-900/10'
-                      : 'border-slate-200 dark:border-slate-800 hover:border-primary hover:bg-primary/5'
-                  }`}
-                >
-                  {uploading ? (
-                    <Loader2 className="animate-spin text-primary" size={32} />
-                  ) : file || payment?.receipt_url ? (
-                    <>
-                      <CheckCircle className="text-emerald-500 mb-2" size={32} />
-                      <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">¡Comprobante Cargado!</span>
-                      <span className="text-[10px] text-slate-400 mt-1">Haz clic para cambiar</span>
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="text-slate-400 mb-2" size={32} />
-                      <span className="text-sm font-bold text-slate-500">Haz click para subir</span>
-                      <span className="text-[10px] text-slate-400">JPG, PNG o PDF</span>
-                    </>
-                  )
-                }
-                </label>
+                <div className="flex flex-col gap-3">
+                  <label
+                    htmlFor="receipt-upload"
+                    className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-[24px] cursor-pointer transition-all ${
+                      file || payment?.receipt_url
+                        ? 'border-emerald-500 bg-emerald-50/30 dark:bg-emerald-900/10'
+                        : 'border-slate-200 dark:border-slate-800 hover:border-primary hover:bg-primary/5'
+                    }`}
+                  >
+                    {uploading ? (
+                      <Loader2 className="animate-spin text-primary" size={32} />
+                    ) : file || payment?.receipt_url ? (
+                      <>
+                        <CheckCircle className="text-emerald-500 mb-2" size={32} />
+                        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">¡Comprobante Cargado!</span>
+                        <span className="text-[10px] text-slate-400 mt-1">Haz clic para cambiar</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="text-slate-400 mb-2" size={32} />
+                        <span className="text-sm font-bold text-slate-500">Haz click para subir</span>
+                        <span className="text-[10px] text-slate-400">JPG, PNG o PDF</span>
+                      </>
+                    )
+                  }
+                  </label>
+
+                  {(file || payment?.receipt_url) && (
+                    <a 
+                      href={file || payment.receipt_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 py-3 bg-emerald-500/10 text-emerald-600 rounded-2xl text-xs font-bold hover:bg-emerald-500/20 transition-all border border-emerald-500/20"
+                    >
+                      <ExternalLink size={16} /> Ver Comprobante Actual
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
 

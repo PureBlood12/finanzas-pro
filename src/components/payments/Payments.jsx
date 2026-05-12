@@ -155,9 +155,14 @@ const Payments = () => {
                     </td>
                     <td className="px-6 py-4">
                       {payment?.receipt_url ? (
-                        <div className="flex items-center gap-2 text-emerald-500 font-bold text-xs uppercase tracking-wider">
-                          <FileText size={16} /> Subido
-                        </div>
+                        <a 
+                          href={payment.receipt_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-emerald-500 hover:text-emerald-600 font-bold text-xs uppercase tracking-wider transition-colors"
+                        >
+                          <FileText size={16} /> Ver Archivo
+                        </a>
                       ) : (
                         <div className="text-slate-300 text-xs italic">Sin archivo</div>
                       )}
