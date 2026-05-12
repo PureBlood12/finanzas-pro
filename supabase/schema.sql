@@ -24,6 +24,9 @@ CREATE TABLE IF NOT EXISTS public.services (
     notes TEXT,
     icon TEXT,
     color TEXT,
+    is_installment BOOLEAN DEFAULT FALSE,
+    total_installments INTEGER,
+    current_installment INTEGER,
     active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

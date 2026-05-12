@@ -59,7 +59,14 @@ const PendingListModal = ({ isOpen, onClose, services }) => {
                       {service.icon || '💸'}
                     </div>
                     <div>
-                      <h4 className="font-bold text-slate-900 dark:text-white leading-tight">{service.name}</h4>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-bold text-slate-900 dark:text-white leading-tight">{service.name}</h4>
+                        {service.is_installment && (
+                          <span className="px-1.5 py-0.5 bg-amber-100 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400 rounded-md text-[8px] font-bold">
+                            {service.current_installment}/{service.total_installments}
+                          </span>
+                        )}
+                      </div>
                       <div className="flex items-center gap-2 mt-1">
                         <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${categories[service.category] || categories.Otro}`}>
                           {service.category}

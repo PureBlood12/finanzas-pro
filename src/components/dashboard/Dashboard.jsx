@@ -95,13 +95,29 @@ const Dashboard = () => {
         status: pendingAmount === 0 ? 'Excelente' : (upcomingCount > 0 ? 'Atención' : 'Al día')
       })
 
-      // --- PREPARE CHART DATA (Mocking trends based on real data) ---
-      const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun']
+      // --- PREPARE CHART DATA (Real historical data) ---
+      const { data: historicalPayments } = await supabase
+        .from('payments')
+        .select('month, paid_amount')
+        .eq('year', currentYear)
+        .order('month', { ascending: true })
+
+      const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+      const monthlyTotals = new Array(12).fill(0)
+      
+      historicalPayments?.forEach(p => {
+        if (p.month >= 1 && p.month <= 12) {
+          monthlyTotals[p.month - 1] += (p.paid_amount || 0)
+        }
+      })
+
+      // Show only up to current month or last 6 months
       const trend = months.map((m, i) => ({
         name: m,
-        value: totalPaid * (0.8 + Math.random() * 0.4) // Simulating historical data relative to current spending
-      }))
-      setChartData(trend)
+        value: monthlyTotals[i]
+      })).slice(0, currentMonth)
+      
+      setChartData(trend.length > 0 ? trend : [{ name: months[currentMonth-1], value: 0 }])
 
       // --- PREPARE CATEGORY DATA ---
       const cats = {}

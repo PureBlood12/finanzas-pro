@@ -16,7 +16,10 @@ const ServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
     alias: '',
     notes: '',
     icon: '💸',
-    color: '#8b5cf6'
+    color: '#8b5cf6',
+    is_installment: false,
+    total_installments: '',
+    current_installment: ''
   })
 
   useEffect(() => {
@@ -30,7 +33,10 @@ const ServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
         alias: editingService.alias || '',
         notes: editingService.notes || '',
         icon: editingService.icon || '💸',
-        color: editingService.color || '#8b5cf6'
+        color: editingService.color || '#8b5cf6',
+        is_installment: editingService.is_installment || false,
+        total_installments: editingService.total_installments || '',
+        current_installment: editingService.current_installment || ''
       })
     } else {
       setFormData({
@@ -42,7 +48,10 @@ const ServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
         alias: '',
         notes: '',
         icon: '💸',
-        color: '#8b5cf6'
+        color: '#8b5cf6',
+        is_installment: false,
+        total_installments: '',
+        current_installment: ''
       })
     }
   }, [editingService, isOpen])
@@ -55,7 +64,9 @@ const ServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
       ...formData,
       user_id: user.id,
       estimated_amount: parseFloat(formData.estimated_amount),
-      due_day: parseInt(formData.due_day)
+      due_day: parseInt(formData.due_day),
+      total_installments: formData.is_installment ? parseInt(formData.total_installments) : null,
+      current_installment: formData.is_installment ? parseInt(formData.current_installment) : null
     }
 
     try {
@@ -196,6 +207,51 @@ const ServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
                     </button>
                   ))}
                 </div>
+              </div>
+
+              <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800">
+                <div className="flex items-center justify-between mb-4">
+                  <label className="text-sm font-bold text-slate-700 dark:text-slate-300">¿Es un pago en cuotas?</label>
+                  <button 
+                    type="button"
+                    onClick={() => setFormData({...formData, is_installment: !formData.is_installment})}
+                    className={`w-12 h-6 rounded-full transition-all relative ${formData.is_installment ? 'bg-primary' : 'bg-slate-300'}`}
+                  >
+                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${formData.is_installment ? 'left-7' : 'left-1'}`} />
+                  </button>
+                </div>
+                
+                <AnimatePresence>
+                  {formData.is_installment && (
+                    <motion.div 
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="grid grid-cols-2 gap-4 overflow-hidden"
+                    >
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Cuota Actual</label>
+                        <input 
+                          type="number" 
+                          placeholder="1"
+                          className="w-full px-3 py-2 bg-white dark:bg-slate-900 border-none rounded-xl outline-none focus:ring-1 focus:ring-primary transition-all text-sm font-bold"
+                          value={formData.current_installment}
+                          onChange={(e) => setFormData({...formData, current_installment: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Total Cuotas</label>
+                        <input 
+                          type="number" 
+                          placeholder="12"
+                          className="w-full px-3 py-2 bg-white dark:bg-slate-900 border-none rounded-xl outline-none focus:ring-1 focus:ring-primary transition-all text-sm font-bold"
+                          value={formData.total_installments}
+                          onChange={(e) => setFormData({...formData, total_installments: e.target.value})}
+                        />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
           </div>
