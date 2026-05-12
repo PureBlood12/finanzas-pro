@@ -24,6 +24,7 @@ import {
   Cell
 } from 'recharts'
 import { supabase } from '../../lib/supabase'
+import PendingListModal from './PendingListModal'
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -35,6 +36,8 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true)
   const [chartData, setChartData] = useState([])
   const [categoryData, setCategoryData] = useState([])
+  const [pendingServices, setPendingServices] = useState([])
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   useEffect(() => {
     fetchDashboardData()
@@ -81,6 +84,9 @@ const Dashboard = () => {
         if (paidServiceIds.has(s.id)) return false
         return s.due_day >= currentDay && s.due_day <= currentDay + 7
       }).length
+
+      const pendingList = activeServices.filter(s => !paidServiceIds.has(s.id))
+      setPendingServices(pendingList)
 
       setStats({
         paid: totalPaid,
@@ -149,6 +155,12 @@ const Dashboard = () => {
     },
   ]
 
+  const handleCardClick = (label) => {
+    if (label === 'Pendiente') {
+      setIsModalOpen(true)
+    }
+  }
+
   return (
     <div className="space-y-8 pb-10">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -172,7 +184,8 @@ const Dashboard = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
-            className="bg-white dark:bg-slate-900 p-6 rounded-[32px] border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all group"
+            onClick={() => handleCardClick(stat.label)}
+            className={`bg-white dark:bg-slate-900 p-6 rounded-[32px] border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all group ${stat.label === 'Pendiente' ? 'cursor-pointer hover:border-amber-500/50' : ''}`}
           >
             <div className="flex justify-between items-start mb-4">
               <div className={`${stat.color} p-3 rounded-2xl text-white shadow-lg shadow-${stat.color.split('-')[1]}-500/20 group-hover:scale-110 transition-transform`}>
@@ -279,6 +292,12 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      <PendingListModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        services={pendingServices}
+      />
     </div>
   )
 }
