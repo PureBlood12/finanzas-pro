@@ -10,7 +10,8 @@ import {
   Copy,
   Info,
   CreditCard,
-  ExternalLink
+  ExternalLink,
+  Trash2
 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 
@@ -22,6 +23,12 @@ const PaymentModal = ({ isOpen, onClose, service, payment, month, year, onSucces
   const [file, setFile] = useState(null)
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
+
+  useEffect(() => {
+    if (payment) {
+      setFile(payment.receipt_url || null)
+    }
+  }, [payment])
 
   useEffect(() => {
     if (payment) {
@@ -78,7 +85,7 @@ const PaymentModal = ({ isOpen, onClose, service, payment, month, year, onSucces
         payment_date: paymentDate,
         status,
         notes,
-        receipt_url: file || payment?.receipt_url
+        receipt_url: file
       }
 
       let error
@@ -114,6 +121,26 @@ const PaymentModal = ({ isOpen, onClose, service, payment, month, year, onSucces
       alert('Error al guardar: ' + error.message)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleDeleteReceipt = async () => {
+    if (!confirm('¿Estás seguro de que quieres borrar este comprobante?')) return
+    
+    try {
+      if (payment) {
+        const { error } = await supabase
+          .from('payments')
+          .update({ receipt_url: null })
+          .eq('id', payment.id)
+        
+        if (error) throw error
+      }
+      
+      setFile(null)
+      alert('Comprobante borrado')
+    } catch (error) {
+      alert('Error al borrar: ' + error.message)
     }
   }
 
@@ -284,15 +311,25 @@ const PaymentModal = ({ isOpen, onClose, service, payment, month, year, onSucces
                   }
                   </label>
 
-                  {(file || payment?.receipt_url) && (
-                    <a 
-                      href={file || payment.receipt_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 py-3 bg-emerald-500/10 text-emerald-600 rounded-2xl text-xs font-bold hover:bg-emerald-500/20 transition-all border border-emerald-500/20"
-                    >
-                      <ExternalLink size={16} /> Ver Comprobante Actual
-                    </a>
+                  {(file) && (
+                    <div className="flex gap-2">
+                      <a 
+                        href={file} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex-1 flex items-center justify-center gap-2 py-3 bg-emerald-500/10 text-emerald-600 rounded-2xl text-xs font-bold hover:bg-emerald-500/20 transition-all border border-emerald-500/20"
+                      >
+                        <ExternalLink size={16} /> Ver Actual
+                      </a>
+                      <button
+                        type="button"
+                        onClick={handleDeleteReceipt}
+                        className="p-3 bg-rose-500/10 text-rose-600 rounded-2xl hover:bg-rose-500/20 transition-all border border-rose-500/10"
+                        title="Borrar Comprobante"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
