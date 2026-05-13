@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS public.services (
     notes TEXT,
     icon TEXT,
     color TEXT,
+    payment_url TEXT,
     is_installment BOOLEAN DEFAULT FALSE,
     total_installments INTEGER,
     current_installment INTEGER,

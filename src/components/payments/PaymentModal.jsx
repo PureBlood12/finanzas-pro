@@ -11,7 +11,8 @@ import {
   Info,
   CreditCard,
   ExternalLink,
-  Trash2
+  Trash2,
+  Globe
 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 
@@ -142,6 +143,19 @@ const PaymentModal = ({ isOpen, onClose, service, payment, month, year, onSucces
     } catch (error) {
       alert('Error al borrar: ' + error.message)
     }
+  }
+
+  const handleQuickPay = () => {
+    if (!service?.payment_url) return
+    
+    // Copy amount to clipboard
+    const amount = paidAmount || service.estimated_amount
+    navigator.clipboard.writeText(amount.toString())
+    
+    // Open payment URL
+    window.open(service.payment_url, '_blank')
+    
+    alert(`Monto $${amount} copiado al portapapeles. ¡Pégalo en el sitio de pago!`)
   }
 
   const copyToClipboard = (text, label) => {
@@ -334,6 +348,17 @@ const PaymentModal = ({ isOpen, onClose, service, payment, month, year, onSucces
                 </div>
               </div>
             </div>
+
+            {service?.payment_url && (
+              <button
+                type="button"
+                onClick={handleQuickPay}
+                className="w-full py-4 bg-emerald-500 text-white font-black rounded-2xl shadow-xl shadow-emerald-500/20 hover:bg-emerald-600 transition-all flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 group mb-4"
+              >
+                <Globe size={24} className="group-hover:rotate-12 transition-transform" />
+                IR A PAGAR AHORA
+              </button>
+            )}
 
             <button
               type="submit"

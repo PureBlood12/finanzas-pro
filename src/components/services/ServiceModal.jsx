@@ -17,6 +17,7 @@ const ServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
     notes: '',
     icon: '💸',
     color: '#8b5cf6',
+    payment_url: '',
     is_installment: false,
     total_installments: '',
     current_installment: ''
@@ -34,6 +35,7 @@ const ServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
         notes: editingService.notes || '',
         icon: editingService.icon || '💸',
         color: editingService.color || '#8b5cf6',
+        payment_url: editingService.payment_url || '',
         is_installment: editingService.is_installment || false,
         total_installments: editingService.total_installments || '',
         current_installment: editingService.current_installment || ''
@@ -49,6 +51,7 @@ const ServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
         notes: '',
         icon: '💸',
         color: '#8b5cf6',
+        payment_url: '',
         is_installment: false,
         total_installments: '',
         current_installment: ''
@@ -191,6 +194,16 @@ const ServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
                   className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 focus:ring-primary transition-all"
                   value={formData.alias}
                   onChange={(e) => setFormData({...formData, alias: e.target.value})}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Web de Pago (Link)</label>
+                <input 
+                  type="url" 
+                  placeholder="https://pagos.edesa.com.ar"
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 focus:ring-primary transition-all"
+                  value={formData.payment_url}
+                  onChange={(e) => setFormData({...formData, payment_url: e.target.value})}
                 />
               </div>
               <div>
