@@ -88,11 +88,17 @@ const Dashboard = () => {
       const pendingList = activeServices.filter(s => !paidServiceIds.has(s.id))
       setPendingServices(pendingList)
 
+      // Overdue items check
+      const overdueCount = activeServices.filter(s => {
+        if (paidServiceIds.has(s.id)) return false
+        return s.due_day < currentDay
+      }).length
+
       setStats({
         paid: totalPaid,
         pending: pendingAmount,
         upcoming: upcomingCount,
-        status: pendingAmount === 0 ? 'Excelente' : (upcomingCount > 0 ? 'Atención' : 'Al día')
+        status: overdueCount > 0 ? '¡Vencido!' : (pendingAmount === 0 ? 'Excelente' : (upcomingCount > 0 ? 'Atención' : 'Al día'))
       })
 
       // --- PREPARE CHART DATA (Real historical data) ---

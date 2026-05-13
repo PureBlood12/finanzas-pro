@@ -5,6 +5,8 @@ import { X, Clock, AlertCircle, ChevronRight } from 'lucide-react'
 const PendingListModal = ({ isOpen, onClose, services }) => {
   if (!isOpen) return null
 
+  const today = new Date().getDate()
+
   const categories = {
     Vivienda: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
     Servicios: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
@@ -80,9 +82,11 @@ const PendingListModal = ({ isOpen, onClose, services }) => {
                   </div>
                   <div className="text-right">
                     <p className="text-lg font-black text-slate-900 dark:text-white">${Number(service.estimated_amount).toLocaleString()}</p>
-                    <div className="flex items-center justify-end gap-1 text-amber-500">
+                    <div className={`flex items-center justify-end gap-1 ${service.due_day < today ? 'text-rose-500' : 'text-amber-500'}`}>
                       <AlertCircle size={12} />
-                      <span className="text-[10px] font-bold uppercase">Pendiente</span>
+                      <span className="text-[10px] font-bold uppercase">
+                        {service.due_day < today ? 'Vencido' : 'Pendiente'}
+                      </span>
                     </div>
                   </div>
                 </div>
